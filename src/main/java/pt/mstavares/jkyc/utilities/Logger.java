@@ -1,5 +1,9 @@
 package pt.mstavares.jkyc.utilities;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -19,7 +23,9 @@ public abstract class Logger {
      */
     public static void logInfo(String className, String toLog) {
         if(Boolean.parseBoolean(System.getenv("KYC_DEBUG"))) {
-            System.out.println(buildLog(className, "INFO", toLog));
+            String log = buildLog(className, "INFO", toLog);
+            System.out.println(buildLog(className, "INFO", log));
+            persistLog(log);
         }
     }
 
@@ -30,7 +36,9 @@ public abstract class Logger {
      */
     public static void logError(String className, String toLog) {
         if(Boolean.parseBoolean(System.getenv("KYC_DEBUG"))) {
-            System.err.println(buildLog(className, "ERROR", toLog));
+            String log = buildLog(className, "ERROR", toLog);
+            System.err.println(buildLog(className, "ERROR", log));
+            persistLog(log);
         }
     }
 
@@ -50,6 +58,19 @@ public abstract class Logger {
                 .append("[").append(className).append("] ")
                 .append(toLog);
         return stringBuilder.toString();
+    }
+
+    /**
+     * This method is used to persist the logs in a certain file
+     * @param log log to be persisted
+     */
+    private static void persistLog(String log) {
+        String filePath = System.getenv("KYC_DEBUG_FILE_PATH");
+        try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath, true)))) {
+            out.println(log);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }
