@@ -6,7 +6,7 @@ package pt.mstavares.jkyc.logic.ptcc.verifiers.wallet.messages;
  */
 public enum WalletMessages {
 
-    SIGNATURE_ERROR_MSG("Signature verifiers failed.");
+    SIGNATURE_ERROR_MSG("Wallet address signature verification failed.");
 
     private final String description;
 
