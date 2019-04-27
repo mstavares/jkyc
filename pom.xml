@@ -69,7 +69,6 @@
         </repository>
     </distributionManagement>
 
-    <!--
     <build>
         <plugins>
             <plugin>
@@ -108,7 +107,6 @@
             </plugin>
         </plugins>
     </build>
-    -->
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
