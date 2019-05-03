@@ -7,6 +7,7 @@
     <groupId>com.github.mstavares</groupId>
     <artifactId>jkyc</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/com.google.inject/guice -->
@@ -60,6 +61,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>site</id>
+            <url>https://github.com/mstavares/jkyc/tree/master</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <plugins>
