@@ -66,10 +66,12 @@ public abstract class Logger {
      */
     private static void persistLog(String log) {
         String filePath = System.getenv("KYC_DEBUG_FILE_PATH");
-        try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath, true)))) {
-            out.println(log);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(filePath != null) {
+            try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath, true)))) {
+                out.println(log);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

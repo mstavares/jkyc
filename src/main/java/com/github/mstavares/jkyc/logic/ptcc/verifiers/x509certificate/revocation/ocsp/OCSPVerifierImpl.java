@@ -39,7 +39,7 @@ import java.util.Arrays;
 public class OCSPVerifierImpl implements OCSPVerifier {
 
     /** This variable is used to store generated nonce */
-    private BigInteger nonce;
+    //private BigInteger nonce;
 
     /**
      * This method is used to verify through a OCSP request if a certain certificate is revoked or not
@@ -53,7 +53,7 @@ public class OCSPVerifierImpl implements OCSPVerifier {
         OCSPReq request = buildOCSPRequest(issuerCertificate, certificateToVerify);
         String ocspUrl = getOCSPUrl(certificateToVerify);
         OCSPResp response = sendOCSPRequest(request, ocspUrl);
-        isGoodCertificate(response, issuerCertificate, certificateToVerify);
+        isGoodCertificate(request, response, issuerCertificate, certificateToVerify);
     }
 
 
@@ -76,7 +76,7 @@ public class OCSPVerifierImpl implements OCSPVerifier {
             // create details for nonce extension. The nonce extension is used to bind
             // a request to a response to prevent replay attacks. As the name implies,
             // the nonce value is something that the client should only use once within a reasonably small period.
-            nonce = BigInteger.valueOf(System.currentTimeMillis());
+            BigInteger nonce = BigInteger.valueOf(System.currentTimeMillis());
             //to create the request Extension
             generator.setRequestExtensions(new Extensions(new Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, false, new DEROctetString(nonce.toByteArray()))));
             return generator.build();
@@ -160,13 +160,13 @@ public class OCSPVerifierImpl implements OCSPVerifier {
      * @param toVerify certificate to being verified
      * @throws CertificateRevokedException
      */
-    private void isGoodCertificate(OCSPResp response, X509Certificate issuer, X509Certificate toVerify) throws CertificateRevokedException {
+    private void isGoodCertificate(OCSPReq request, OCSPResp response, X509Certificate issuer, X509Certificate toVerify) throws CertificateRevokedException {
         try {
             // SUCCESSFUL here means the OCSP request worked, it doesn't mean the certificates is valid.
             if (response.getStatus() == OCSPRespBuilder.SUCCESSFUL) {
                 BasicOCSPResp basicOCSPResponse = (BasicOCSPResp) response.getResponseObject();
                 verifySignature(basicOCSPResponse);
-                verifyNonce(basicOCSPResponse);
+                verifyNonce(request, basicOCSPResponse);
                 verifyIssuer(basicOCSPResponse, issuer);
                 verifyCertificateId(basicOCSPResponse, toVerify);
                 verifyCertificateStatus(basicOCSPResponse);
@@ -245,21 +245,15 @@ public class OCSPVerifierImpl implements OCSPVerifier {
      * @param response OCSP response
      * @throws CertificateRevokedException
      */
-    private void verifyNonce(BasicOCSPResp response) throws CertificateRevokedException {
-        Extension receivedNonce = response.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
-        try {
-            if (receivedNonce != null) {
-                final byte[] nonceReceivedData = receivedNonce.getExtnValue().getEncoded();
-                ASN1InputStream ain = new ASN1InputStream(nonceReceivedData);
-                ASN1OctetString oct = ASN1OctetString.getInstance(ain.readObject());
-                if(!Arrays.equals(nonce.toByteArray(), oct.getOctets())) {
-                    throw new CertificateRevokedException("Nonce verification missed");
-                }
-            } else {
-                throw new CertificateRevokedException("Received nonce is null");
+    private void verifyNonce(OCSPReq request, BasicOCSPResp response) throws CertificateRevokedException {
+        Extension generatedNonce = request.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
+        Extension nonceReceive = response.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
+        if (nonceReceive != null) {
+            if(!generatedNonce.equals(nonceReceive)) {
+                throw new CertificateRevokedException("Nonce verification missed");
             }
-        } catch (IOException ex) {
-            throw new CertificateRevokedException("Nonce verification missed");
+        } else {
+            throw new CertificateRevokedException("Received nonce is null");
         }
     }
 
